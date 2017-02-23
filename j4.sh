@@ -5,7 +5,7 @@
 ## Login   <james.faure@epitech.net>
 ## 
 ## Started on  Wed Feb 22 20:59:14 2017 Jamie Faure
-## Last update Thu Feb 23 21:07:44 2017 Jamie Faure
+## Last update Thu Feb 23 22:39:29 2017 Jamie Faure
 ##
 
 ## Give AI winning positions and check if it's move wins
@@ -72,6 +72,14 @@ take_first() {
     return 1
 }
 
+rand_move() {
+    line=1; matches=3;
+    while (( board[line - 1] < matches)) || (( matches > MAX )); do
+	(( line = RANDOM % LINES + 1 ))
+	(( matches = RANDOM % (board[line - 1] + 1) + 1 ))
+    done
+}
+
 j4() {
     new=( "${board[@]}" )
     unset save tmp;
@@ -122,7 +130,7 @@ check_move() {
 	say got: $read_line, $read_matches
 	say ${RED}AI cheated! ${NORMAL}i no play... "(lel)";
 	exit 2; fi
-    (( stat ^= (board[read_line - 1] + read_matches) % (MAX + 1) ^ board[read_line - 1] % (MAX + 1) ))
+    (( stat ^= (board[read_line - 1] % (MAX + 1)+ read_matches) % (MAX + 1) ^ board[read_line - 1] % (MAX + 1) ))
     unset tmp
     for a in ${board[@]}; do
 	if (( a % (MAX + 1) == 1 )); then let ++tmp; fi
@@ -136,6 +144,7 @@ game() {
     init
     while (( 1 )) ; do
 	if ! take_first; then break; fi
+	if [ ! -z RAND_OPT ]; then rand_move; else take_first; fi
 	mkmove $line $matches
 	if ! take_first; then break; fi
 	j4; new=( ${board[@]} );
@@ -152,7 +161,10 @@ game() {
 }
 
 VERBOSE=true
-if [ $# -lt 2 ]; then usage; exit 0; 
+unset RAND_OPT
+if [ $# -lt 2 ]; then usage; exit 0;
+elif [ $3 = "-r" ]; then RAND_OPT=true;
 elif [ $# -gt 2 ]; then unset VERBOSE; fi
 LINES=$1; MAX=$2
 ($NAME $LINES $MAX < $pipe | game > $pipe)3>&1
+echo $RAND_OPT
